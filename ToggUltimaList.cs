@@ -5,19 +5,21 @@ using UnityEngine;
 //Discord: Draken Stark#2888
 //Twitter & Telegram: @DrakenStark
 
+//Special Thanks to Texelsaur
+
 //Version 2.5
 
-public class OnlyOneGroupToggleList : UdonSharpBehaviour
+public class ToggUltimaList : UdonSharpBehaviour
 {
 	[Header("Toggled Objects")]	
-	[Tooltip("Objects To Disable:\n- Whenever an object with OnlyOneGroupToggleAction using this script as an Object With List, Objects listed here will be Disabled if not directly Enabled by that script.")]
+	[Tooltip("Objects To Disable:\n- Whenever an object with ToggUltimaAction using this script as an Object With List, Objects listed here will be Disabled if not directly Enabled by that script.")]
 	public GameObject[] objectsToDisable;
-	[Tooltip("Objects To Reenable:\n- Whenever all objects with OnlyOneGroupToggleAction are simultaniously Deactivated, Objects listed here will be Enabled.")]
+	[Tooltip("Objects To Reenable:\n- Whenever all objects with ToggUltimaAction are simultaniously Deactivated, Objects listed here will be Enabled.")]
 	public GameObject[] objectsToReenable;
 	[HideInInspector] public GameObject[] interactibleObjectsToReenable;
-	[HideInInspector] public OnlyOneGroupToggleAction lastToggleActive;
+	[HideInInspector] public ToggUltimaAction lastToggleActive;
 	
-	public void setLastToggleInactive(OnlyOneGroupToggleAction checkActive)
+	public void setLastToggleInactive(ToggUltimaAction checkActive)
 	{
 		if(lastToggleActive != null && lastToggleActive != checkActive)
 		{

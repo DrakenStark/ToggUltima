@@ -7,11 +7,11 @@ using UnityEngine;
 
 //Version 2.5
 
-public class OnlyOneGroupToggleRemote : UdonSharpBehaviour
+public class ToggUltimaRemote : UdonSharpBehaviour
 {
 	[Header("Remote Toggle Object")]	
 	[Tooltip("Object To Remotely Toggle:\n- Whenever this object is activated, the object attached here will perform its activation.")]
-	[SerializeField] private OnlyOneGroupToggleAction objectToRemotelyInteract;
+	[SerializeField] private ToggUltimaAction objectToRemotelyInteract;
 	[Header("Optional Features")]
 	[Tooltip("One Way Activation:\n- Check this box to prevent players from disabling this Toggle via a second interaction.\n- While One Way Activation is enabled, the only way this Toggle may be Deactivated is via another Toggle through an Object With List.")]
 	[SerializeField] private bool oneWayActivation = false;

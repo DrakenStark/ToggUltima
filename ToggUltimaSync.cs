@@ -11,7 +11,7 @@ using VRC.Udon.Common.Interfaces;
 
 //Version 2.5
 
-public class OnlyOneGroupToggleSync : UdonSharpBehaviour
+public class ToggUltimaSync : UdonSharpBehaviour
 {
 	[SerializeField] private GameObject[] toggleActionScripts;
 	private bool[] toggleActionScriptStates;

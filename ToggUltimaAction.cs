@@ -9,17 +9,17 @@ using UnityEngine;
 
 //Version 2.5
 
-public class OnlyOneGroupToggleAction : UdonSharpBehaviour
+public class ToggUltimaAction : UdonSharpBehaviour
 {
 	[Header("List Object")]
-	[Tooltip("Object With List:\n- An object that has an OnlyOneGroupToggleList script may be dragged here to support mutual exclusivity.\n- The OnlyOneGroupToggleList must be configured to disable all objects you wish to have mutually exclusive.\n-All OnlyOneGroupToggleAction scripts using the same Object With List will be mutually exclusive with each other.")]
-	[SerializeField] private OnlyOneGroupToggleList objectWithList;
+	[Tooltip("Object With List:\n- An object that has an ToggUltimaList script may be dragged here to support mutual exclusivity.\n- The ToggUltimaList must be configured to disable all objects you wish to have mutually exclusive.\n-All ToggUltimaAction scripts using the same Object With List will be mutually exclusive with each other.")]
+	[SerializeField] private ToggUltimaList objectWithList;
 	[Tooltip("Auto Add OTE To OTD:\n- Automatically adds the Objects To Enable to the Object With List's Objects To Disable when the object this script is in is loaded or enabled for the first time.")]
 	[SerializeField] private bool autoAddOTEToOTD = false;
 	private bool toggleListUpdated = false;
 	[Header("Multiplayer Sync Object")]
-	[Tooltip("Object With Sync:\n- An object that has an OnlyOneGroupToggleSync script may be dragged here to support keeping this script synced up with all players.")]
-	[SerializeField] private OnlyOneGroupToggleSync objectWithSync;
+	[Tooltip("Object With Sync:\n- An object that has an ToggUltimaSync script may be dragged here to support keeping this script synced up with all players.")]
+	[SerializeField] private ToggUltimaSync objectWithSync;
 	[Header("Toggled Objects")]
 	[Tooltip("Objects To Enable:\n- Drag Objects here to be Enabled while this Toggle is Active via interaction with by a player.\n- To be interacted with, the object with this script must have a collider!")]
 	[SerializeField] private GameObject[] objectsToEnable;
