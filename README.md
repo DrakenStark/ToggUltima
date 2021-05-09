@@ -16,6 +16,6 @@ Remote Script:
 
 Sync Script:
 - Synchornize Action script toggles for both current players and players just joining in.
-- Each Action script is represented by a bit within an integer. (Reducing network traffic for managing as many toggles as could be in a puzzle dungeon!)
-- Configurable cooldown feature to further reduce network spam.
+- Each Action script is represented by a bit within an integer. (Minimizing network traffic for managing as few or as many toggles as desired!)
+- Configurable cooldown feature to reduce network spam from players attempting to spam buttons.
 - Custom Deserialization script that doesn't use OnDeserialization, allowing it to only be run when absolutely necessary. By default, only used while a player is joining and waiting for the integer to be synced with other players. (Still avoiding constantly running scripts!) :D
