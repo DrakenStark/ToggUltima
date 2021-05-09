@@ -5,7 +5,7 @@ using UnityEngine;
 //Discord: Draken Stark#2888
 //Twitter & Telegram: @DrakenStark
 
-//Version 2.5
+//Version 3
 
 public class ToggUltimaRemote : UdonSharpBehaviour
 {
@@ -22,32 +22,32 @@ public class ToggUltimaRemote : UdonSharpBehaviour
 	[Tooltip("Activate On Disable:\n- Check this box to activate this script whenever the object containing it is disabled (will not run without being enabled first).")]
 	[SerializeField] private bool activateOnDisable = false;
 	
+	
 	public override void Interact()
 	{
-		if(objectToRemotelyInteract != null && activateOnInteract)
-		{
-			objectToRemotelyInteract.onlyOneToggleTimerCheck();
-		} else if(objectToRemotelyInteract == null) {
-			Debug.LogWarning("No Object was set or found to remotely activate.", gameObject);
-		}
+		_activationCheck(activateOnInteract);
 	}
 	
 	private void OnDisable()
 	{
-		if(objectToRemotelyInteract != null && activateOnDisable)
-		{
-			objectToRemotelyInteract.onlyOneToggleTimerCheck();
-		} else if(objectToRemotelyInteract == null) {
-			Debug.LogWarning("No Object was set or found to remotely activate.", gameObject);
-		}
+		_activationCheck(activateOnDisable);
 	}
 	
 	private void OnEnable()
 	{
-		if(objectToRemotelyInteract != null && activateOnEnable)
+		_activationCheck(activateOnEnable);
+	}
+	
+	
+	private void _activationCheck(bool activationMethod)
+	{
+		if(objectToRemotelyInteract != null)
 		{
-			objectToRemotelyInteract.onlyOneToggleTimerCheck();
-		} else if(objectToRemotelyInteract == null) {
+			if(activationMethod)
+			{
+				objectToRemotelyInteract.toggUltimaTimerPartOne();
+			}
+		} else {
 			Debug.LogWarning("No Object was set or found to remotely activate.", gameObject);
 		}
 	}

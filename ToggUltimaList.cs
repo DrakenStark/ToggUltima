@@ -7,7 +7,7 @@ using UnityEngine;
 
 //Special Thanks to Texelsaur
 
-//Version 2.5
+//Version 3
 
 public class ToggUltimaList : UdonSharpBehaviour
 {
@@ -19,15 +19,17 @@ public class ToggUltimaList : UdonSharpBehaviour
 	[HideInInspector] public GameObject[] interactibleObjectsToReenable;
 	[HideInInspector] public ToggUltimaAction lastToggleActive;
 	
-	public void setLastToggleInactive(ToggUltimaAction checkActive)
+	
+	public void _setLastToggleInactive(ToggUltimaAction checkActive)
 	{
 		if(lastToggleActive != null && lastToggleActive != checkActive)
 		{
-			lastToggleActive.toggleActive = false;
+			lastToggleActive.toggleIsActive = false;
 		}
 	}
 	
-	public void autoUpdateOTD(GameObject[] arrayToAdd, GameObject sourceActionScript)
+	
+	public void _autoUpdateOTD(GameObject[] arrayToAdd, GameObject sourceActionScript)
 	{
 		if(arrayToAdd != null && arrayToAdd.GetLength(0) > 0)
 		{

@@ -1,5 +1,8 @@
 using UdonSharp;
 using UnityEngine;
+using UnityEngine.UI;
+using VRC.SDKBase;
+using VRC.Udon.Common.Interfaces;
 
 //By DrakenStark
 //Discord: Draken Stark#2888
@@ -7,7 +10,7 @@ using UnityEngine;
 
 //Special Thanks to ArtySilvers
 
-//Version 2.5
+//Version 3
 
 public class ToggUltimaAction : UdonSharpBehaviour
 {
@@ -17,18 +20,22 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	[Tooltip("Auto Add OTE To OTD:\n- Automatically adds the Objects To Enable to the Object With List's Objects To Disable when the object this script is in is loaded or enabled for the first time.")]
 	[SerializeField] private bool autoAddOTEToOTD = false;
 	private bool toggleListUpdated = false;
-	[Header("Multiplayer Sync Object")]
-	[Tooltip("Object With Sync:\n- An object that has an ToggUltimaSync script may be dragged here to support keeping this script synced up with all players.")]
-	[SerializeField] private ToggUltimaSync objectWithSync;
+	
+	//[Header("Multiplayer Sync Object")]
+	//[Tooltip("Object With Sync:\n- An object that has an ToggUltimaSync script may be dragged here to support keeping this script synced up with all players.")]
+	//This is now set automatically when this script is added to a ToggUltima Sync Script.
+	[HideInInspector] public ToggUltimaSync objectWithSync;
+	
 	[Header("Toggled Objects")]
 	[Tooltip("Objects To Enable:\n- Drag Objects here to be Enabled while this Toggle is Active via interaction with by a player.\n- To be interacted with, the object with this script must have a collider!")]
 	[SerializeField] private GameObject[] objectsToEnable;
 	[Tooltip("Objects To Enable:\n- Drag Objects here to be Disabled while this Toggle is Active via interaction with by a player.\n- Upon this Toggle being Deactivated via player interaction or another Toggle being Activated, these objects will be Enabled.\n- If you want objects that will stay disabled after this Toggle being Activated, include them into the Disabled Objects section of an Object With List.\n- To be interacted with, the object with this script must have a collider!")]
 	[SerializeField] private GameObject[] objectsToReenable;
-	[HideInInspector] public bool toggleActive = false;
+	[HideInInspector] public bool toggleIsActive = false;
+	
 	[Header("Optional Features")]
 	[Tooltip("One Way Activation:\n- Check this box to prevent players from disabling this Toggle via a second interaction.\n- While One Way Activation is enabled, the only way this Toggle may be Deactivated is via another Toggle through an Object With List.")]
-	[SerializeField] private bool oneWayActivation = false;
+	public bool oneWayActivation = false;
 	[Tooltip("Activate On Interact:\n- Check this box to enable the ability for players to directly interact with the object containing this script.")]
 	[SerializeField] private bool activateOnInteract = true;
 	[Tooltip("Activate On Enable:\n- Check this box to activate this script whenever the object containing it is enabled (upon load or after it had been disabled).")]
@@ -39,10 +46,19 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	[SerializeField] private float activationDelay = 0f;
 	[Tooltip("Ignore While Waiting:\n- This will be ignored if Activation Delay is set to 0.\n- Cannot be used simultaniously with Reset Timer On Activate.\n- Once activated and while waiting, any activations will be ignored until after the time is up and objects are toggled.")]
 	[SerializeField] private bool ignoreWhileWaiting = true;
-	private bool hasBeenActivated = false;
+	private bool waitingToActivate = false;
 	[Tooltip("Reset Timer On Activate:\n- This will be ignored if Activation Delay is set to 0.\n- Cannot be used simultaniously with Ignore While Waiting.\n- Once activated and while waiting, any activation will reset the delay for when the objects will be toggled.")]
 	[SerializeField] private bool resetTimerOnActivate = false;
-	private int timesActivated = 0;
+	private float timeOfLastActivation;
+	[HideInInspector] public bool timerSyncFirstRunFilter = true;
+	private bool timerPartThreeActivationFilter = false;
+	
+	
+	//Commented out due to issue within VRChat itself. May attempt to get working again in the future.
+	//activationDelaySyncTime is a cooldown to account for both ignoreWhileWaiting and only allowing one call from resetTimerOnActivate to resolve.
+	//private float activationDelaySyncTime = Time.time;
+	
+	//
 	
 	
 	//This is where arrays of GameObjects are checked to be enabled or disabled accordingly.
@@ -73,7 +89,7 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	{
 		if(activateOnInteract)
 		{
-			onlyOneToggleTimerCheck();
+			toggUltimaTimerPartOne();
 		}
 	}
 	
@@ -81,150 +97,225 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	{
 		if(activateOnDisable)
 		{
-			onlyOneToggleTimerCheck();
+			toggUltimaTimerPartOne();
 		}
 	}
 	
-	//The OnEnable function here not only activates the main function, but also can check if the Objects to Enable have been added to the List Object.
+	//The OnEnable function here not only activates the main toggle function, but also can check if the Objects to Enable have been added to the List Object.
 	private void OnEnable()
 	{
+		//Commented out due to issue within VRChat itself. May attempt to get working again in the future.
+		//Should timeOfLastActivation is left at 0, this script won't run until elapsed time exceeds the activationDelay, so it's set here subtracting the activationDelay to allow for immediate use.
+		timeOfLastActivation = Time.time - activationDelay;
+		
 		if(!toggleListUpdated)
 		{
 			toggleListUpdated = true;
 			if(objectWithList != null && objectsToEnable.GetLength(0) > 0)
 			{
-				objectWithList.autoUpdateOTD(objectsToEnable, gameObject);
+				objectWithList._autoUpdateOTD(objectsToEnable, gameObject);
 			}
 		}
 		
 		if(activateOnEnable)
 		{
-			onlyOneToggleTimerCheck();
+			toggUltimaTimerPartOne();
 		}
 	}
+	
 	
 	//This function is run to determine if there's a waiting period before running the object toggles.
-	public void onlyOneToggleTimerCheck()
+	public void toggUltimaTimerPartOne()
 	{
+		if(objectWithSync != null && Time.time >= (objectWithSync.timeOfLastCooldown + objectWithSync.cooldownPeriod))
+		{
+			objectWithSync.coolingDown = false;
+		}
 		if(activationDelay > 0)
 		{
-			if(ignoreWhileWaiting && !hasBeenActivated)
+			if(ignoreWhileWaiting && !waitingToActivate || !ignoreWhileWaiting)
 			{
-				timesActivated++;
-				hasBeenActivated = true;
 				if(objectWithSync != null)
 				{
-					//objectWithSync.toggleActiveSync(gameObject, toggleActive, false);
+					if(!objectWithSync.coolingDown)
+					{
+						SendCustomNetworkEvent(NetworkEventTarget.All, "toggUltimaTimerPartTwoSync");
+					}
+				} else {
+					toggUltimaTimerPartTwoLocal();
 				}
-				SendCustomEventDelayedSeconds("_onlyOneToggleActivate", activationDelay);
-			} else if(!ignoreWhileWaiting) {
-				timesActivated++;
-				hasBeenActivated = true;
-				if(objectWithSync != null)
-				{
-					//objectWithSync.toggleActiveSync(gameObject, toggleActive, false);
-				}
-				SendCustomEventDelayedSeconds("_onlyOneToggleActivate", activationDelay);
 			}
+		//The else here will run in the case there is supposed to not be a delay before running after being activated.
 		} else {
-			timesActivated++;
-			hasBeenActivated = true;
+			//The delay based variables are still tracked here for debugging purposes should a world developer wish to test general functionality of their setup faster where there is supposed to be a delay.
 			if(objectWithSync != null)
 			{
-				//objectWithSync.toggleActiveSync(gameObject, toggleActive, false);
-			}
-			SendCustomEventDelayedSeconds("_onlyOneToggleActivate", activationDelay);
-		}
-		//Debug.Log(timesActivated);
-	}
-
-	
-	public void _onlyOneToggleActivate()
-	{
-		if(!(activationDelay > 0) || ((!ignoreWhileWaiting || hasBeenActivated) && (!resetTimerOnActivate || timesActivated < 2)))
-		{
-			if(objectWithList != null)
-			{
-				if(objectWithList.interactibleObjectsToReenable != null && objectWithList.interactibleObjectsToReenable.GetLength(0) > 0)
+				if(!objectWithSync.coolingDown)
 				{
-					_toggUltimaModifyGameObjectArray(objectWithList.interactibleObjectsToReenable, true, "objectWithList.interactibleObjectsToReenable");
-				}
-				
-				objectWithList.interactibleObjectsToReenable = objectsToReenable;
-				objectWithList.setLastToggleInactive(this);
-				objectWithList.lastToggleActive = this;
-			}
-			
-			if(oneWayActivation)
-			{
-				toggleActive = false;
-			}
-			
-			if(!toggleActive)
-			{
-				if(objectWithList != null) 
-				{
-					if(objectWithList.objectsToDisable != null && objectWithList.objectsToDisable.GetLength(0) > 0)
-					{
-						_toggUltimaModifyGameObjectArray(objectWithList.objectsToDisable, false, "objectWithList.objectsToDisable");
-					}
-					
-					if(objectWithList.objectsToReenable != null && objectWithList.objectsToReenable.GetLength(0) > 0)
-					{
-						_toggUltimaModifyGameObjectArray(objectWithList.objectsToReenable, false, "objectWithList.objectsToReenable");
-					}
-				}
-				
-				if(objectsToReenable != null && objectsToReenable.GetLength(0) > 0)
-				{
-					_toggUltimaModifyGameObjectArray(objectsToReenable, false, "objectsToReenable");
-				}
-					if(objectsToEnable != null && objectsToEnable.GetLength(0) > 0)
-				{
-					_toggUltimaModifyGameObjectArray(objectsToEnable, true, "objectsToEnable");
-				}
-				
-				toggleActive = true;
-				if(objectWithSync != null)
-				{
-					//objectWithSync.toggleActiveSync(gameObject, toggleActive, true);
+					timeOfLastActivation = Time.time;
+					objectWithSync._toggUltimaDebugLog("No Timer Run Globally. " + timeOfLastActivation);
+					waitingToActivate = true;
+					timerPartThreeActivationFilter = true;
+					timerSyncFirstRunFilter = false;
+					SendCustomNetworkEvent(NetworkEventTarget.All, "toggUltimaActionFilter");
 				}
 			} else {
-				if(objectsToEnable != null && objectsToEnable.GetLength(0) > 0)
+				timeOfLastActivation = Time.time;
+				waitingToActivate = true;
+				timerPartThreeActivationFilter = true;
+				timerSyncFirstRunFilter = false;
+				toggUltimaActionFilter();
+			}
+		}
+	}
+	
+	public void toggUltimaTimerPartTwoLocal()
+	{
+		timeOfLastActivation = Time.time;
+		if(objectWithSync != null)
+		{
+			objectWithSync._toggUltimaDebugLog("Timer 2 Locally Run. " + timeOfLastActivation);
+		}
+		//waitingToActivate checks if the script has been activated at all and is waiting on a delay. This is to ensure only the first activation runs and any others are ignored if ignoreWhileWaiting is enabled.
+		waitingToActivate = true;
+		timerPartThreeActivationFilter = true;
+		timerSyncFirstRunFilter = false;
+		SendCustomEventDelayedSeconds("toggUltimaActionFilter", activationDelay);
+	}
+	
+	
+	public void toggUltimaTimerPartTwoSync()
+	{
+		//timesActivated++;
+		timeOfLastActivation = Time.time;
+		objectWithSync._toggUltimaDebugLog("Timer 2 Sync Run. " + timeOfLastActivation);
+		waitingToActivate = true;
+		SendCustomEventDelayedSeconds("toggUltimaTimerPartThreeSync", activationDelay);
+	}
+	
+	public void toggUltimaTimerPartThreeSync()
+	{
+		objectWithSync._toggUltimaDebugLog("Timer 3 Sync Run Globally.");
+		timerPartThreeActivationFilter = true;
+		timerSyncFirstRunFilter = false;
+		SendCustomNetworkEvent(NetworkEventTarget.All, "toggUltimaActionFilter");
+	}
+	
+	
+	//The actual Action function needs to be seperate from it's if statement to be allowed to run for Late Joiners.
+	public void toggUltimaActionFilter()
+	{
+		float lookAtMeImTheTimeNow = Time.time;
+		if(objectWithSync != null)
+		{
+			objectWithSync._toggUltimaDebugLog("Activation Attempt. " + lookAtMeImTheTimeNow);
+			
+			if(timerSyncFirstRunFilter)
+			{
+				timerSyncFirstRunFilter = false;
+				//Have the synchronizing Late Joiner use the same key to the door that everyone else has. They'll be using it anyway later like everyone else.
+				timerPartThreeActivationFilter = true;
+			}
+		}
+		
+		//If ignoreWhileWaiting or resetTimerOnActivate are false, then the conditions on the right of each don't matter. Otherwise if either are true, then their respective requirement has to be met to run.
+		if(!(activationDelay > 0) || ((!ignoreWhileWaiting || waitingToActivate && timerPartThreeActivationFilter) && (!resetTimerOnActivate || ((timeOfLastActivation + activationDelay <= lookAtMeImTheTimeNow) && timerPartThreeActivationFilter))))
+		{
+			toggUltimaActivate();
+			if(objectWithSync != null)
+			{
+				objectWithSync._toggUltimaDebugLog("Activation Run. " + lookAtMeImTheTimeNow);
+			}
+		}
+	}
+	
+	public void toggUltimaActivate()
+	{	
+		timerPartThreeActivationFilter = false;
+		
+		if(objectWithSync != null)
+		{
+			objectWithSync._cooldownFunctionHot();
+		}
+			
+		if(objectWithList != null)
+		{
+			if(objectWithList.interactibleObjectsToReenable != null && objectWithList.interactibleObjectsToReenable.GetLength(0) > 0)
+			{
+				_toggUltimaModifyGameObjectArray(objectWithList.interactibleObjectsToReenable, true, "objectWithList.interactibleObjectsToReenable");
+			}
+			
+			objectWithList.interactibleObjectsToReenable = objectsToReenable;
+			objectWithList._setLastToggleInactive(this);
+			objectWithList.lastToggleActive = this;
+		}
+		
+		if(oneWayActivation)
+		{
+			toggleIsActive = false;
+		}
+		
+		if(!toggleIsActive)
+		{
+			if(objectWithList != null) 
+			{
+				if(objectWithList.objectsToDisable != null && objectWithList.objectsToDisable.GetLength(0) > 0)
 				{
-					_toggUltimaModifyGameObjectArray(objectsToEnable, false, "objectsToEnable");
+					_toggUltimaModifyGameObjectArray(objectWithList.objectsToDisable, false, "objectWithList.objectsToDisable");
 				}
 				
-				if(objectWithList != null) 
+				if(objectWithList.objectsToReenable != null && objectWithList.objectsToReenable.GetLength(0) > 0)
 				{
-					if(objectWithList.objectsToDisable != null && objectWithList.objectsToDisable.GetLength(0) > 0)
-					{
-						_toggUltimaModifyGameObjectArray(objectWithList.objectsToDisable, false, "objectWithList.objectsToDisable");
-					}
-					
-					if(objectWithList.objectsToReenable != null && objectWithList.objectsToReenable.GetLength(0) > 0)
-					{
-						_toggUltimaModifyGameObjectArray(objectWithList.objectsToReenable, true, "objectWithList.objectsToReenable");
-					}
-				}
-				
-				if(objectsToReenable != null && objectsToReenable.GetLength(0) > 0)
-				{
-					_toggUltimaModifyGameObjectArray(objectsToReenable, true, "objectsToReenable");
-				}
-				
-				toggleActive = false;
-				if(objectWithSync != null)
-				{
-					//objectWithSync.toggleActiveSync(gameObject, toggleActive, true);
+					_toggUltimaModifyGameObjectArray(objectWithList.objectsToReenable, false, "objectWithList.objectsToReenable");
 				}
 			}
-			hasBeenActivated = false;
+			
+			if(objectsToReenable != null && objectsToReenable.GetLength(0) > 0)
+			{
+				_toggUltimaModifyGameObjectArray(objectsToReenable, false, "objectsToReenable");
+			}
+				if(objectsToEnable != null && objectsToEnable.GetLength(0) > 0)
+			{
+				_toggUltimaModifyGameObjectArray(objectsToEnable, true, "objectsToEnable");
+			}
+			
+			toggleIsActive = true;
+			if(objectWithSync != null && !objectWithSync.firstRun)
+			{
+				objectWithSync._toggUltimaUpdateLocalVariable();
+				objectWithSync._toggUltimaUpdateSyncVariable();
+			}
+		} else {
+			if(objectsToEnable != null && objectsToEnable.GetLength(0) > 0)
+			{
+				_toggUltimaModifyGameObjectArray(objectsToEnable, false, "objectsToEnable");
+			}
+			
+			if(objectWithList != null) 
+			{
+				if(objectWithList.objectsToDisable != null && objectWithList.objectsToDisable.GetLength(0) > 0)
+				{
+					_toggUltimaModifyGameObjectArray(objectWithList.objectsToDisable, false, "objectWithList.objectsToDisable");
+				}
+				
+				if(objectWithList.objectsToReenable != null && objectWithList.objectsToReenable.GetLength(0) > 0)
+				{
+					_toggUltimaModifyGameObjectArray(objectWithList.objectsToReenable, true, "objectWithList.objectsToReenable");
+				}
+			}
+			
+			if(objectsToReenable != null && objectsToReenable.GetLength(0) > 0)
+			{
+				_toggUltimaModifyGameObjectArray(objectsToReenable, true, "objectsToReenable");
+			}
+			
+			toggleIsActive = false;
+			if(objectWithSync != null && !objectWithSync.firstRun)
+			{
+				objectWithSync._toggUltimaUpdateLocalVariable();
+				objectWithSync._toggUltimaUpdateSyncVariable();
+			}
 		}
-		if(timesActivated > 0)
-		{
-			timesActivated--;
-			//Debug.Log(timesActivated);
-		}
+		waitingToActivate = false;
 	}
 }
