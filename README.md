@@ -1,5 +1,5 @@
 # ToggUltima
-UdonSharp toggle script for standard buttons with useful options. Synchronizing capability with minimized network impact, even for large scale worlds like a puzzle dungeon from popular console games!
+UdonSharp toggle script for standard buttons with useful options. Synchronizing capability with minimized network impact for any size world, even large scale worlds built like a puzzle dungeon from a popular game series!
 
 Action Script:
 - Quickly setup buttons to toggle on/off game objects (i.e. mirrors, video players, doors, etc.)
