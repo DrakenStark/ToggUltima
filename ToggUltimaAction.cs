@@ -10,7 +10,7 @@ using VRC.Udon.Common.Interfaces;
 
 //Special Thanks to ArtySilvers
 
-//Version 3
+//Version 3.1
 
 public class ToggUltimaAction : UdonSharpBehaviour
 {
@@ -52,13 +52,8 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	private float timeOfLastActivation;
 	[HideInInspector] public bool timerSyncFirstRunFilter = true;
 	private bool timerPartThreeActivationFilter = false;
-	
-	
-	//Commented out due to issue within VRChat itself. May attempt to get working again in the future.
-	//activationDelaySyncTime is a cooldown to account for both ignoreWhileWaiting and only allowing one call from resetTimerOnActivate to resolve.
-	//private float activationDelaySyncTime = Time.time;
-	
-	//
+	[Tooltip("Object With Bouncer:\n- Use an object with a ToggUltima Bouncer script here to restrict legitimate use of a toggle to specific users.\n- Notice: This is not a end all be all to world interaction security and will only keep the players who are not using mods in check. The Bouncer script and its implementation is just a deterrent and will only be developed as such.")]
+	[SerializeField] private ToggUltimaBouncer objectWithBouncer;
 	
 	
 	//This is where arrays of GameObjects are checked to be enabled or disabled accordingly.
@@ -127,44 +122,48 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	//This function is run to determine if there's a waiting period before running the object toggles.
 	public void toggUltimaTimerPartOne()
 	{
-		if(objectWithSync != null && Time.time >= (objectWithSync.timeOfLastCooldown + objectWithSync.cooldownPeriod))
+		//Logically if objectWithBouncer does not exist, the code should run. Networking.IsOwner() will only matter if objectWithBouncer is present, so it is more efficient code to not test if objectWithBouncer exists a second time for each location that it may exist.
+		if((!(objectWithBouncer != null) || objectWithBouncer._toggUltimaCheckList(gameObject)) && ((!(objectWithList != null) || !(objectWithList.objectWithBouncer != null)) || objectWithList.objectWithBouncer._toggUltimaCheckList(gameObject)) &&  ((!(objectWithSync != null) || !(objectWithSync.objectWithBouncer != null)) || objectWithSync.objectWithBouncer._toggUltimaCheckList(gameObject)))
 		{
-			objectWithSync.coolingDown = false;
-		}
-		if(activationDelay > 0)
-		{
-			if(ignoreWhileWaiting && !waitingToActivate || !ignoreWhileWaiting)
+			if(objectWithSync != null && Time.time >= (objectWithSync.timeOfLastCooldown + objectWithSync.cooldownPeriod))
 			{
+				objectWithSync.coolingDown = false;
+			}
+			if(activationDelay > 0)
+			{
+				if(ignoreWhileWaiting && !waitingToActivate || !ignoreWhileWaiting)
+				{
+					if(objectWithSync != null)
+					{
+						if(!objectWithSync.coolingDown)
+						{
+							SendCustomNetworkEvent(NetworkEventTarget.All, "toggUltimaTimerPartTwoSync");
+						}
+					} else {
+						toggUltimaTimerPartTwoLocal();
+					}
+				}
+			//The else here will run in the case there is supposed to not be a delay before running after being activated.
+			} else {
+				//The delay based variables are still tracked here for debugging purposes should a world developer wish to test general functionality of their setup faster where there is supposed to be a delay.
 				if(objectWithSync != null)
 				{
 					if(!objectWithSync.coolingDown)
 					{
-						SendCustomNetworkEvent(NetworkEventTarget.All, "toggUltimaTimerPartTwoSync");
+						timeOfLastActivation = Time.time;
+						objectWithSync._toggUltimaDebugLog("No Timer Run Globally. " + timeOfLastActivation);
+						waitingToActivate = true;
+						timerPartThreeActivationFilter = true;
+						timerSyncFirstRunFilter = false;
+						SendCustomNetworkEvent(NetworkEventTarget.All, "toggUltimaActionFilter");
 					}
 				} else {
-					toggUltimaTimerPartTwoLocal();
-				}
-			}
-		//The else here will run in the case there is supposed to not be a delay before running after being activated.
-		} else {
-			//The delay based variables are still tracked here for debugging purposes should a world developer wish to test general functionality of their setup faster where there is supposed to be a delay.
-			if(objectWithSync != null)
-			{
-				if(!objectWithSync.coolingDown)
-				{
 					timeOfLastActivation = Time.time;
-					objectWithSync._toggUltimaDebugLog("No Timer Run Globally. " + timeOfLastActivation);
 					waitingToActivate = true;
 					timerPartThreeActivationFilter = true;
 					timerSyncFirstRunFilter = false;
-					SendCustomNetworkEvent(NetworkEventTarget.All, "toggUltimaActionFilter");
+					toggUltimaActionFilter();
 				}
-			} else {
-				timeOfLastActivation = Time.time;
-				waitingToActivate = true;
-				timerPartThreeActivationFilter = true;
-				timerSyncFirstRunFilter = false;
-				toggUltimaActionFilter();
 			}
 		}
 	}

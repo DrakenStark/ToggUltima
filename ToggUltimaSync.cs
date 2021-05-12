@@ -10,7 +10,7 @@ using VRC.Udon.Common.Interfaces;
 
 //Special Thanks to Zephyxus
 
-//Version 2.5
+//Version 3.1
 
 //Known issue: Spammed buttons will not sync 100% of the activations. This may be resolved by creating a buffer. This is a "to do" for a future revision.
 
@@ -25,6 +25,7 @@ public class ToggUltimaSync : UdonSharpBehaviour
 	//For now needSync is only used during initialization, but it could be also used in future improvements to the script.
 	private bool needSync = true;
 	[HideInInspector] public bool firstRun = true;
+	
 	[Header("Optional Features")]
 	[Tooltip("Cooldown Period:\n- Prevent the script from running immediately after it has just been run.\n- This decreases the chances of losing synchronization because of players spamming buttons. If there are too many actions to run, clients may begin to ignore some of them.")]
 	public float cooldownPeriod = 0.5f;
@@ -37,6 +38,9 @@ public class ToggUltimaSync : UdonSharpBehaviour
 	private bool deserializationFilterBool = false;
 	[Tooltip("Persistent Deserialization:\n- Notice: This is an experimental feature!\n- If synchronization is a must at all costs, this may be used as a last resort if players are somehow getting out of sync. This will force players to double check their current toggles with the last updated value they have received.")]
 	[SerializeField] private bool persistentDeserialization = false;
+	[Tooltip("Object With Bouncer:\n- Use an object with a ToggUltima Bouncer script here to restrict legitimate use of all attached ToggUltima Action scripts to specific users.\n- Notice: This is not a end all be all to world interaction security and will only keep the players who are not using mods in check. The Bouncer script and its implementation is just a deterrent and will only be developed as such.")]
+	[SerializeField] public ToggUltimaBouncer objectWithBouncer;
+	
 	[Header("Optional Multiplayer Debug Output")]
 	[Tooltip("Debug Sync Display:\n- Drag a UI Text object here and it will be updated with variable status info from this script.")]
 	[SerializeField] private Text debugSyncDisplay;

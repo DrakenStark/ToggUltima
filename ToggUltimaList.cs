@@ -7,7 +7,7 @@ using UnityEngine;
 
 //Special Thanks to Texelsaur
 
-//Version 3
+//Version 3.1
 
 public class ToggUltimaList : UdonSharpBehaviour
 {
@@ -18,6 +18,10 @@ public class ToggUltimaList : UdonSharpBehaviour
 	public GameObject[] objectsToReenable;
 	[HideInInspector] public GameObject[] interactibleObjectsToReenable;
 	[HideInInspector] public ToggUltimaAction lastToggleActive;
+	
+	[Header("Optional Features")]
+	[Tooltip("Object With Bouncer:\n- Use an object with a ToggUltima Bouncer script here to restrict legitimate use of all attached ToggUltima Action scripts to specific users.\n- Notice: This is not a end all be all to world interaction security and will only keep the players who are not using mods in check. The Bouncer script and its implementation is just a deterrent and will only be developed as such.")]
+	[SerializeField] public ToggUltimaBouncer objectWithBouncer;
 	
 	
 	public void _setLastToggleInactive(ToggUltimaAction checkActive)
