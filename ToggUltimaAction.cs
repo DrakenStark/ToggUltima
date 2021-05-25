@@ -106,7 +106,7 @@ public class ToggUltimaAction : UdonSharpBehaviour
 		if(!toggleListUpdated)
 		{
 			toggleListUpdated = true;
-			if(objectWithList != null && objectsToEnable.GetLength(0) > 0)
+			if(oneWayActivation && objectWithList != null && objectsToEnable.GetLength(0) > 0)
 			{
 				objectWithList._autoUpdateOTD(objectsToEnable, gameObject);
 			}
