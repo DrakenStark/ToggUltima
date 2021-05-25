@@ -10,7 +10,7 @@ using VRC.Udon.Common.Interfaces;
 
 //Special Thanks to ArtySilvers
 
-//Version 3.1
+//Version 3.2
 
 public class ToggUltimaAction : UdonSharpBehaviour
 {
@@ -106,7 +106,7 @@ public class ToggUltimaAction : UdonSharpBehaviour
 		if(!toggleListUpdated)
 		{
 			toggleListUpdated = true;
-			if(objectWithList != null && objectsToEnable.GetLength(0) > 0)
+			if(autoAddOTEToOTD && objectWithList != null && objectsToEnable.GetLength(0) > 0)
 			{
 				objectWithList._autoUpdateOTD(objectsToEnable, gameObject);
 			}

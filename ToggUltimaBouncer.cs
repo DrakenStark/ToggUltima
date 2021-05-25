@@ -8,7 +8,7 @@ using VRC.Udon.Common.Interfaces;
 //Discord: Draken Stark#2888
 //Twitter & Telegram: @DrakenStark
 
-//Version 3.1
+//Version 3.2
 
 //Notice: This is not a end all be all to world interaction security and will only keep the players who are not using mods in check. This script is just a deterrent and will only be developed as such.
 
