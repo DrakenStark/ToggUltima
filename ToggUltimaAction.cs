@@ -7,16 +7,17 @@ using VRC.Udon.Common.Interfaces;
 //By DrakenStark
 //Discord: Draken Stark#2888
 //Twitter & Telegram: @DrakenStark
+//Discord Server: https://discord.gg/ZC4zd3hN5v
 
 //Special Thanks to ArtySilvers
 
-//Version 3.2
+//Version 3.3
 
 public class ToggUltimaAction : UdonSharpBehaviour
 {
 	[Header("List Object")]
 	[Tooltip("Object With List:\n- An object that has an ToggUltimaList script may be dragged here to support mutual exclusivity.\n- The ToggUltimaList must be configured to disable all objects you wish to have mutually exclusive.\n-All ToggUltimaAction scripts using the same Object With List will be mutually exclusive with each other.")]
-	[SerializeField] private ToggUltimaList objectWithList;
+	[SerializeField] private ToggUltimaList objectWithList = null;
 	[Tooltip("Auto Add OTE To OTD:\n- Automatically adds the Objects To Enable to the Object With List's Objects To Disable when the object this script is in is loaded or enabled for the first time.")]
 	[SerializeField] private bool autoAddOTEToOTD = false;
 	private bool toggleListUpdated = false;
@@ -24,13 +25,13 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	//[Header("Multiplayer Sync Object")]
 	//[Tooltip("Object With Sync:\n- An object that has an ToggUltimaSync script may be dragged here to support keeping this script synced up with all players.")]
 	//This is now set automatically when this script is added to a ToggUltima Sync Script.
-	[HideInInspector] public ToggUltimaSync objectWithSync;
+	[HideInInspector] public ToggUltimaSync objectWithSync = null;
 	
 	[Header("Toggled Objects")]
 	[Tooltip("Objects To Enable:\n- Drag Objects here to be Enabled while this Toggle is Active via interaction with by a player.\n- To be interacted with, the object with this script must have a collider!")]
-	[SerializeField] private GameObject[] objectsToEnable;
+	[SerializeField] private GameObject[] objectsToEnable = null;
 	[Tooltip("Objects To Enable:\n- Drag Objects here to be Disabled while this Toggle is Active via interaction with by a player.\n- Upon this Toggle being Deactivated via player interaction or another Toggle being Activated, these objects will be Enabled.\n- If you want objects that will stay disabled after this Toggle being Activated, include them into the Disabled Objects section of an Object With List.\n- To be interacted with, the object with this script must have a collider!")]
-	[SerializeField] private GameObject[] objectsToReenable;
+	[SerializeField] private GameObject[] objectsToReenable = null;
 	[HideInInspector] public bool toggleIsActive = false;
 	
 	[Header("Optional Features")]
@@ -53,7 +54,7 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	[HideInInspector] public bool timerSyncFirstRunFilter = true;
 	private bool timerPartThreeActivationFilter = false;
 	[Tooltip("Object With Bouncer:\n- Use an object with a ToggUltima Bouncer script here to restrict legitimate use of a toggle to specific users.\n- Notice: This is not a end all be all to world interaction security and will only keep the players who are not using mods in check. The Bouncer script and its implementation is just a deterrent and will only be developed as such.")]
-	[SerializeField] private ToggUltimaBouncer objectWithBouncer;
+	[SerializeField] private ToggUltimaBouncer objectWithBouncer = null;
 	
 	
 	//This is where arrays of GameObjects are checked to be enabled or disabled accordingly.
@@ -281,8 +282,7 @@ public class ToggUltimaAction : UdonSharpBehaviour
 			toggleIsActive = true;
 			if(objectWithSync != null && !objectWithSync.firstRun)
 			{
-				objectWithSync._toggUltimaUpdateLocalVariable();
-				objectWithSync._toggUltimaUpdateSyncVariable();
+				objectWithSync._toggUltimaUpdateVariables();
 			}
 		} else {
 			if(objectsToEnable != null && objectsToEnable.GetLength(0) > 0)
@@ -311,8 +311,7 @@ public class ToggUltimaAction : UdonSharpBehaviour
 			toggleIsActive = false;
 			if(objectWithSync != null && !objectWithSync.firstRun)
 			{
-				objectWithSync._toggUltimaUpdateLocalVariable();
-				objectWithSync._toggUltimaUpdateSyncVariable();
+				objectWithSync._toggUltimaUpdateVariables();
 			}
 		}
 		waitingToActivate = false;

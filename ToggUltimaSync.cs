@@ -7,10 +7,11 @@ using VRC.Udon.Common.Interfaces;
 //By DrakenStark
 //Discord: Draken Stark#2888
 //Twitter & Telegram: @DrakenStark
+//Discord Server: https://discord.gg/ZC4zd3hN5v
 
 //Special Thanks to Zephyxus
 
-//Version 3.2
+//Version 3.3
 
 //Known issue: Spammed buttons will not sync 100% of the activations. This may be resolved by creating a buffer. This is a "to do" for a future revision.
 
@@ -19,7 +20,7 @@ public class ToggUltimaSync : UdonSharpBehaviour
 	
 	[Header("Synchronized Action Scripts")]
 	[Tooltip("Toggle Action Scripts:\n- Drag ToggUltima Action Scripts here to automatically have them synchronized between current players and late joiners.\n- Avoid using more than 30 Action Scripts. If more than 30 Action Scripts need to be synced between players, create another Object for an additional ToggUltimaSync Script and repeat as needed.")]
-	[SerializeField] private ToggUltimaAction[] toggleActionScripts;
+	[SerializeField] private ToggUltimaAction[] toggleActionScripts = null;
 	[UdonSynced] private int binaryStatesSync = 1;
 	private int binaryStatesLocal = 1;
 	//For now needSync is only used during initialization, but it could be also used in future improvements to the script.
@@ -31,7 +32,7 @@ public class ToggUltimaSync : UdonSharpBehaviour
 	public float cooldownPeriod = 0.5f;
 	//This is to prevent players from producing a lot of network spam.
 	[HideInInspector] public bool coolingDown = false;
-	[HideInInspector] public float timeOfLastCooldown;
+	[HideInInspector] public float timeOfLastCooldown = 0f;
 	[Tooltip("Deserialization Delay:\n- This is how often late joiners will check if they've received the variable synchronization needed to let them catch up to current players.\n- Generally doesn't need to be changed, but for more intense worlds, this number may be increased if needed.")]
 	[SerializeField] private float deserializationDelay = 2f;
 	private float deserializationFilterTime = 0f;
@@ -39,13 +40,13 @@ public class ToggUltimaSync : UdonSharpBehaviour
 	[Tooltip("Persistent Deserialization:\n- Notice: This is an experimental feature!\n- If synchronization is a must at all costs, this may be used as a last resort if players are somehow getting out of sync. This will force players to double check their current toggles with the last updated value they have received.")]
 	[SerializeField] private bool persistentDeserialization = false;
 	[Tooltip("Object With Bouncer:\n- Use an object with a ToggUltima Bouncer script here to restrict legitimate use of all attached ToggUltima Action scripts to specific users.\n- Notice: This is not a end all be all to world interaction security and will only keep the players who are not using mods in check. The Bouncer script and its implementation is just a deterrent and will only be developed as such.")]
-	[SerializeField] public ToggUltimaBouncer objectWithBouncer;
+	[SerializeField] public ToggUltimaBouncer objectWithBouncer = null;
 	
 	[Header("Optional Multiplayer Debug Output")]
 	[Tooltip("Debug Sync Display:\n- Drag a UI Text object here and it will be updated with variable status info from this script.")]
-	[SerializeField] private Text debugSyncDisplay;
+	[SerializeField] private Text debugSyncDisplay = null;
 	[Tooltip("Debug Text Output:\n- Drag a UI Text object here and it will be updated with function status info from this script.")]
-	[SerializeField] private Text debugTextOutput;
+	[SerializeField] private Text debugTextOutput = null;
 
 	
 	public void OnEnable()
@@ -108,16 +109,28 @@ public class ToggUltimaSync : UdonSharpBehaviour
 		}
 		needSync = false;
 		firstRun = false;
-		_toggUltimaUpdateLocalVariable();
+		_toggUltimaUpdateVariables();
 		binaryStatesSync = binaryStatesLocal;
 		_toggUltimaDebugLog("Sync variable initialized.");
 		_updateDebugSyncText();
 	}
 	
 	
-	public void _toggUltimaUpdateLocalVariable()
+	public void _toggUltimaUpdateVariables()
 	{
-		_toggUltimaDebugLog("SyncScript Local Variable Updated.");
+		if(Networking.IsOwner(Networking.LocalPlayer, gameObject))
+		{
+			for(int arrayIndex = 0; arrayIndex < toggleActionScripts.GetLength(0); arrayIndex++)
+			{
+				if(toggleActionScripts[arrayIndex] != null && toggleActionScripts[arrayIndex].toggleIsActive && (binaryStatesSync & (1<<(arrayIndex + 1))) == 0)
+				{
+					binaryStatesSync = (1<<(arrayIndex + 1)) + binaryStatesSync;
+				} else if(toggleActionScripts[arrayIndex] != null && !toggleActionScripts[arrayIndex].toggleIsActive && ((binaryStatesSync & (1<<(arrayIndex + 1))) != 0)) {
+					binaryStatesSync = binaryStatesSync - (1<<(arrayIndex + 1));
+				}
+			}
+		}
+		
 		for(int arrayIndex = 0; arrayIndex < toggleActionScripts.GetLength(0); arrayIndex++)
 		{
 			if(toggleActionScripts[arrayIndex] != null && toggleActionScripts[arrayIndex].toggleIsActive && (binaryStatesLocal & (1<<(arrayIndex + 1))) == 0)
@@ -127,28 +140,16 @@ public class ToggUltimaSync : UdonSharpBehaviour
 				binaryStatesLocal = binaryStatesLocal - (1<<(arrayIndex + 1));
 			}
 		}
-		_updateDebugSyncText();
-	}
-	
-	
-	public void _toggUltimaUpdateSyncVariable()
-	{
-		_toggUltimaDebugLog("SyncScript Sync Variable Updated.");
-		for(int arrayIndex = 0; arrayIndex < toggleActionScripts.GetLength(0); arrayIndex++)
-		{
-			if(toggleActionScripts[arrayIndex] != null && toggleActionScripts[arrayIndex].toggleIsActive && (binaryStatesSync & (1<<(arrayIndex + 1))) == 0)
-			{
-				binaryStatesSync = (1<<(arrayIndex + 1)) + binaryStatesSync;
-			} else if(toggleActionScripts[arrayIndex] != null && !toggleActionScripts[arrayIndex].toggleIsActive && ((binaryStatesSync & (1<<(arrayIndex + 1))) != 0)) {
-				binaryStatesSync = binaryStatesSync - (1<<(arrayIndex + 1));
-			}
-		}
+		
+		RequestSerialization();
+		_toggUltimaDebugLog("Sync Variables Updated.");
 		_updateDebugSyncText();
 	}
 	
 	
 	public void _toggUltimaDeserialization()
 	{
+		RequestSerialization();
 		if(Time.time >= (deserializationFilterTime + deserializationDelay))
 		{
 			deserializationFilterBool = false;
@@ -156,15 +157,6 @@ public class ToggUltimaSync : UdonSharpBehaviour
 		
 		if(needSync && !deserializationFilterBool)
 		{
-			
-			//Synced variable is not initialized correctly in VRChat. Should VRChat fix this, then this firstRun section and variable may be removed.
-			if(firstRun)
-			{
-				_toggUltimaDebugLog("Waiting for synchronization... ( <.<)\n" + _toggUltimaBinaryStatus());
-				//This line used to work around an issue with VRChat not initializing the synced integer, so manually got it to update via this. (Before I added an underscore to stop network calls to it.)
-				//SendCustomNetworkEvent(NetworkEventTarget.Owner, "toggUltimaOwnerEnableSync()");
-			}
-			
 			if(binaryStatesSync != binaryStatesLocal)
 			{
 				if(!firstRun)
@@ -206,12 +198,20 @@ public class ToggUltimaSync : UdonSharpBehaviour
 				
 				_updateDebugSyncText();
 			}
+			
+			
 			if(needSync || persistentDeserialization)
 			{
 				needSync = true;
 				deserializationFilterBool = true;
 				deserializationFilterTime = Time.time;
 				SendCustomEventDelayedSeconds("_toggUltimaDeserialization", deserializationDelay);
+			}
+			
+			
+			if(firstRun)
+			{
+				_toggUltimaDebugLog("Waiting for synchronization... ( <.<)\n" + _toggUltimaBinaryStatus());
 			}
 		}
 	}

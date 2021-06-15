@@ -4,24 +4,25 @@ using UnityEngine;
 //By DrakenStark
 //Discord: Draken Stark#2888
 //Twitter & Telegram: @DrakenStark
+//Discord Server: https://discord.gg/ZC4zd3hN5v
 
 //Special Thanks to Texelsaur
 
-//Version 3.2
+//Version 3.3
 
 public class ToggUltimaList : UdonSharpBehaviour
 {
 	[Header("Toggled Objects")]	
 	[Tooltip("Objects To Disable:\n- Whenever an object with ToggUltimaAction using this script as an Object With List, Objects listed here will be Disabled if not directly Enabled by that script.")]
-	public GameObject[] objectsToDisable;
+	public GameObject[] objectsToDisable = null;
 	[Tooltip("Objects To Reenable:\n- Whenever all objects with ToggUltimaAction are simultaniously Deactivated, Objects listed here will be Enabled.")]
-	public GameObject[] objectsToReenable;
-	[HideInInspector] public GameObject[] interactibleObjectsToReenable;
-	[HideInInspector] public ToggUltimaAction lastToggleActive;
+	public GameObject[] objectsToReenable = null;
+	[HideInInspector] public GameObject[] interactibleObjectsToReenable = null;
+	[HideInInspector] public ToggUltimaAction lastToggleActive = null;
 	
 	[Header("Optional Features")]
 	[Tooltip("Object With Bouncer:\n- Use an object with a ToggUltima Bouncer script here to restrict legitimate use of all attached ToggUltima Action scripts to specific users.\n- Notice: This is not a end all be all to world interaction security and will only keep the players who are not using mods in check. The Bouncer script and its implementation is just a deterrent and will only be developed as such.")]
-	[SerializeField] public ToggUltimaBouncer objectWithBouncer;
+	[SerializeField] public ToggUltimaBouncer objectWithBouncer = null;
 	
 	
 	public void _setLastToggleInactive(ToggUltimaAction checkActive)

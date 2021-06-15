@@ -7,8 +7,9 @@ using VRC.Udon.Common.Interfaces;
 //By DrakenStark
 //Discord: Draken Stark#2888
 //Twitter & Telegram: @DrakenStark
+//Discord Server: https://discord.gg/ZC4zd3hN5v
 
-//Version 3.2
+//Version 3.3
 
 //Notice: This is not a end all be all to world interaction security and will only keep the players who are not using mods in check. This script is just a deterrent and will only be developed as such.
 
@@ -16,15 +17,15 @@ public class ToggUltimaBouncer : UdonSharpBehaviour
 {
 	[Header("When this Bouncer Script is linked to another ToggUltima Action, List, or Sync Script: The associated Action Scripts will only allow users that fit the Enabled options here. No enabled options means that feature will be disabled for all legitimate players.")]
 	[Tooltip("Only Object Owner Allowed:\n- Check this box to allow the Object Owner to interact with this Toggle. (Usually the Object Owner is the same as the Instance Host.)")]
-	[SerializeField] private string[] allowedUsernames;
+	[SerializeField] private string[] allowedUsernames = null;
 	[Tooltip("Only Object Owner Allowed:\n- Check this box to allow the Object Owner to interact with this Toggle. (Usually the Object Owner is the same as the Instance Host.)")]
-	[SerializeField] private string[] blockedUsernames;
+	[SerializeField] private string[] blockedUsernames = null;
 	[Tooltip("Only Object Owner Allowed:\n- Check this box to always allow the Object Owner to interact with this Toggle. Usually an Object Owner is the same as the Instance Host.")]
 	[SerializeField] private bool allowObjectOwnerAlways = true;
 	
 	[Header("Optional Multiplayer Debug Output")]
 	[Tooltip("Debug Text Output:\n- Drag a UI Text object here and it will be updated with function status info from this script.")]
-	[SerializeField] private Text debugTextOutput;
+	[SerializeField] private Text debugTextOutput = null;
 	
 	
 	//Wishful thinking for a future revision.
