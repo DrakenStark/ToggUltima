@@ -11,7 +11,7 @@ using VRC.Udon.Common.Interfaces;
 
 //Special Thanks to ArtySilvers
 
-//Version 3.3
+//Version 3.4
 
 public class ToggUltimaAction : UdonSharpBehaviour
 {

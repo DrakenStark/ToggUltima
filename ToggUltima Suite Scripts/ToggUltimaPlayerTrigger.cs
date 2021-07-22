@@ -9,7 +9,7 @@ using VRC.Udon.Common.Interfaces;
 //Twitter & Telegram: @DrakenStark
 //Discord Server: https://discord.gg/ZC4zd3hN5v
 
-//Version 3.3.1
+//Version 3.4
 
 public class ToggUltimaPlayerTrigger : UdonSharpBehaviour
 {

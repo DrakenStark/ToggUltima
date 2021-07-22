@@ -6,7 +6,7 @@ using UnityEngine;
 //Twitter & Telegram: @DrakenStark
 //Discord Server: https://discord.gg/ZC4zd3hN5v
 
-//Version 3.3
+//Version 3.4
 
 public class ToggUltimaRemote : UdonSharpBehaviour
 {
