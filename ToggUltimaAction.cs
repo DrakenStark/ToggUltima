@@ -37,8 +37,11 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	[Header("Optional Features")]
 	[Tooltip("One Way Activation:\n- Check this box to prevent players from disabling this Toggle via a second interaction.\n- While One Way Activation is enabled, the only way this Toggle may be Deactivated is via another Toggle through an Object With List.")]
 	public bool oneWayActivation = false;
-	[Tooltip("Activate On Interact:\n- Check this box to enable the ability for players to directly interact with the object containing this script.")]
+	[Tooltip("Activate On Interact:\n- Check this box to allow players to activate this script through direct interaction with the object containing it.")]
 	[SerializeField] private bool activateOnInteract = true;
+	//This is now automated, no need to include it.
+	//[Tooltip("Allow Other Script Interaction:\n- Check this box to enable the ability for players to directly interact with the object containing this script.\n- Only uncheck this box if there is no intention of allowing players to directly interact with this object.")]
+	//[SerializeField] private bool allowScriptInteraction = true;
 	[Tooltip("Activate On Enable:\n- Check this box to activate this script whenever the object containing it is enabled (upon load or after it had been disabled).")]
 	[SerializeField] private bool activateOnEnable = false;
 	[Tooltip("Activate On Disable:\n- Check this box to activate this script whenever the object containing it is disabled (will not run without being enabled first).")]
@@ -100,6 +103,10 @@ public class ToggUltimaAction : UdonSharpBehaviour
 	//The OnEnable function here not only activates the main toggle function, but also can check if the Objects to Enable have been added to the List Object.
 	private void OnEnable()
 	{
+		if(!activateOnInteract) {
+			this.DisableInteractive = true;
+		}
+		
 		//Commented out due to issue within VRChat itself. May attempt to get working again in the future.
 		//Should timeOfLastActivation is left at 0, this script won't run until elapsed time exceeds the activationDelay, so it's set here subtracting the activationDelay to allow for immediate use.
 		timeOfLastActivation = Time.time - activationDelay;
