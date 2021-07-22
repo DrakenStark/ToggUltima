@@ -1,6 +1,9 @@
 # ToggUltima
 UdonSharp toggle script for standard buttons with useful options. Synchronizing capability with minimized network impact for any size world. Even a large scale world built like a puzzle dungeon from a popular game series!
 
+Requires Udon Sharp version v0.19.12 or above along with the relevant version of VRChat SDK 3 for Worlds, both of which are available here:
+https://github.com/MerlinVR/UdonSharp/releases/tag/v0.19.12
+
 Action Script:
 - Quickly setup buttons to toggle on/off game objects (i.e. mirrors, video players, doors, etc.)
 - Ability to temporarily disable objects. (Useful for clearing objects off of a wall for a mirror or videoplayer.)
