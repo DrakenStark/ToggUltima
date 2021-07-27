@@ -8,7 +8,7 @@ using VRC.Udon.Common.Interfaces;
 //Twitter & Telegram: @DrakenStark
 //Discord Server: https://discord.gg/ZC4zd3hN5v
 
-//Version 3.4
+//Version 3.5
 
 public class ToggUltimaMoveObject : UdonSharpBehaviour
 {

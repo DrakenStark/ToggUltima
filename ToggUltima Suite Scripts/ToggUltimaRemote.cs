@@ -6,7 +6,7 @@ using UnityEngine;
 //Twitter & Telegram: @DrakenStark
 //Discord Server: https://discord.gg/ZC4zd3hN5v
 
-//Version 3.4
+//Version 3.5
 
 public class ToggUltimaRemote : UdonSharpBehaviour
 {
@@ -22,6 +22,15 @@ public class ToggUltimaRemote : UdonSharpBehaviour
 	[SerializeField] private bool _activateOnDisable = false;
 	
 	
+	private void OnEnable()
+	{
+		if(!activateOnInteract) {
+			this.DisableInteractive = true;
+		}
+		
+		_activationCheck(_activateOnEnable);
+	}
+	
 	public override void Interact()
 	{
 		_activationCheck(_activateOnInteract);
@@ -32,10 +41,6 @@ public class ToggUltimaRemote : UdonSharpBehaviour
 		_activationCheck(_activateOnDisable);
 	}
 	
-	private void OnEnable()
-	{
-		_activationCheck(_activateOnEnable);
-	}
 	
 	
 	private void _activationCheck(bool _activationMethod)

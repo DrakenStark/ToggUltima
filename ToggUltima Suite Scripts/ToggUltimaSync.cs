@@ -11,7 +11,7 @@ using VRC.Udon.Common.Interfaces;
 
 //Special Thanks to Zephyxus
 
-//Version 3.4
+//Version 3.5
 
 //Known issue: Spammed buttons will not sync 100% of the activations. This may be resolved by creating a buffer. This is a "to do" for a future revision.
 

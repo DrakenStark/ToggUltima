@@ -7,7 +7,7 @@ using VRC.Udon.Common.Interfaces;
 //Discord: Draken Stark#2888
 //Twitter & Telegram: @DrakenStark
 
-//Version 3.4
+//Version 3.5
 
 public class ToggUltimaRemotePlayerRespawn : UdonSharpBehaviour
 {
