@@ -24,7 +24,7 @@ public class ToggUltimaRemote : UdonSharpBehaviour
 	
 	private void OnEnable()
 	{
-		if(!activateOnInteract) {
+		if(!_activateOnInteract) {
 			this.DisableInteractive = true;
 		}
 		
